@@ -3,6 +3,7 @@ import os
 import eel
 
 from engine.features import *
+from engine.command import *
 eel.init("www") # to recognize our frontend directory
 
 playAssistantsound() # to play the assistant sound

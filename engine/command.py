@@ -1,37 +1,98 @@
 import pyttsx3
 import speech_recognition as sr
-
+import eel
+import time
 def speak(text):
-    """Function to convert text to speech."""
-
-    engine = pyttsx3.init('sapi5')  # Initialize the text-to-speech engine
-    voices = engine.getProperty('voices')  # Get available voices
-    print(voices)  # Print available voices for debugging
-    engine.setProperty('voice', voices[0].id)  # Set the voice to the first available voice
-    engine.setProperty('rate', 174)  # Set the speech rate
-    # engine.setProperty('volume', 1)  # Set the volume to maximum (1
+    text = str(text)
+    engine = pyttsx3.init('sapi5')
+    voices = engine.getProperty('voices') 
+    engine.setProperty('voice', voices[0].id)
+    engine.setProperty('rate', 174)
+    eel.DisplayMessage(text)
     engine.say(text)
+    eel.receiverText(text)
     engine.runAndWait()
 
-def takecommand():
-    r = sr.Recognizer()  # Initialize the recognizer
-    with sr.Microphone() as source:  # Use the microphone as the audio source
-        print("Listening...")
-        r.pause_threshold = 1  # Set the pause threshold for recognizing speech
-        r.adjust_for_ambient_noise(source)
 
-        audio = r.listen(source)  # Listen for audio input
+def takecommand():
+
+    r = sr.Recognizer()
+
+    with sr.Microphone() as source:
+        print('listening....')
+        eel.DisplayMessage('listening....')
+        r.pause_threshold = 1
+        r.adjust_for_ambient_noise(source)
+        
+        audio = r.listen(source, 10, 6)
 
     try:
-        print("Recognizing...")
-        query = r.recognize_google(audio, language='en-in')  # Recognize speech using Google Web Speech API
-        print(f"User said: {query}\n")  # Print the recognized text
+        print('recognizing')
+        eel.DisplayMessage('recognizing....')
+        query = r.recognize_google(audio, language='en-in')
+        print(f"user said: {query}")
+        eel.DisplayMessage(query)
+        time.sleep(2)
+       
     except Exception as e:
-        print("Sorry, I did not understand that. Please try again.")
-        return "None"  # Return None if speech recognition fails
+        return ""
     
-    return query.lower()  # Return the recognized text
+    return query.lower()
 
-text = takecommand()  # Call the function to take command from the user
+@eel.expose
+def allCommands(message=1):
 
-speak(text)
+    if message == 1:
+        query = takecommand()
+        print(query)
+        eel.senderText(query)
+    else:
+        query = message
+        eel.senderText(query)
+    try:
+
+        if "open" in query:
+            from engine.features import openCommand
+            openCommand(query)
+        elif "on youtube" in query:
+            from engine.features import PlayYoutube
+            PlayYoutube(query)
+        
+        elif "send message" in query or "phone call" in query or "video call" in query:
+            from engine.features import findContact, whatsApp, makeCall, sendMessage
+            contact_no, name = findContact(query)
+            if(contact_no != 0):
+                speak("Which mode you want to use whatsapp or mobile")
+                preferance = takecommand()
+                print(preferance)
+
+                if "mobile" in preferance:
+                    if "send message" in query or "send sms" in query: 
+                        speak("what message to send")
+                        message = takecommand()
+                        sendMessage(message, contact_no, name)
+                    elif "phone call" in query:
+                        makeCall(name, contact_no)
+                    else:
+                        speak("please try again")
+                elif "whatsapp" in preferance:
+                    message = ""
+                    if "send message" in query:
+                        message = 'message'
+                        speak("what message to send")
+                        query = takecommand()
+                                        
+                    elif "phone call" in query:
+                        message = 'call'
+                    else:
+                        message = 'video call'
+                                        
+                    whatsApp(contact_no, query, message, name)
+
+        else:
+            from engine.features import chatBot
+            chatBot(query)
+    except:
+        print("error")
+    
+    eel.ShowHood()
