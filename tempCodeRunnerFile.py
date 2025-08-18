@@ -1,0 +1,1 @@
+# pip install pvporcupine == 1.9.5
