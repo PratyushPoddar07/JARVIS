@@ -18,3 +18,6 @@ def start():
 # pip install Eel
 # pip install pywhatkit
 # pip install pvporcupine == 1.9.5
+# pip install hugchat
+# pip install playsound
+
